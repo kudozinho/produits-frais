@@ -55,7 +55,7 @@ Dans les 4 fichiers : **aucune valeur manquante et aucun doublon exact**.
 
 ## Étape 2 : modèle de données
 
-### Modèle relationnel (les 4 fichiers bruts)
+### Modèle relationnel
 
 ![Modèle relationnel](images/modele_relationnel.png)
 
@@ -63,7 +63,7 @@ Dans les 4 fichiers : **aucune valeur manquante et aucun doublon exact**.
 - `transaction` se relie à `price` par `Date` + `Item Code` (le prix d'achat du jour)
 - `loss_rate` a exactement un taux par produit (relation 1 pour 1)
 
-### Schéma en étoile (pour le dashboard)
+### Schéma en étoile
 
 ![Schéma en étoile](images/schema_etoile.png)
 
