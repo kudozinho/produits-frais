@@ -1,0 +1,2 @@
+# Les CSV ne vont pas sur Git : transaction.csv fait 50 Mo, fact_sales.csv plus de 100 Mo
+data/
