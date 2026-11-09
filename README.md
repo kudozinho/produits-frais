@@ -18,8 +18,7 @@ Objectif : nettoyer les 4 fichiers reçus (`transaction.csv`, `product.csv`, `pr
 
 Dans les 4 fichiers : **aucune valeur manquante et aucun doublon exact**.
 
-### transaction.csv (Henriquet) : 878 503 lignes
-
+### transaction.csv (Henriquet) :
 | Problème trouvé | Ce qu'on fait | Pourquoi (logique métier) |
 |---|---|---|
 | `Item Code` est lu comme un nombre | On le lit en texte | C'est un code produit, pas une valeur à additionner |
@@ -28,14 +27,13 @@ Dans les 4 fichiers : **aucune valeur manquante et aucun doublon exact**.
 | Doublon probable le 2021-10-16 à 16:40:22.748 : même produit, même milliseconde, mais 0,565 kg et 0,578 kg | On garde les 2 lignes | Les poids sont différents, ce n'est pas un doublon exact (impact : 4,62 RMB) |
 | Certains produits sont vendus au sachet ou à la boîte alors que la colonne dit "kilo" | Colonne `unite_vente` (kg ou unité) dans `dim_product` | Additionner des kilos et des sachets fausserait la quantité vendue |
 
-### price.csv (Henriquet) : 55 982 lignes
-
+### price.csv (Henriquet) :
 | Problème trouvé | Ce qu'on fait | Pourquoi (logique métier) |
 |---|---|---|
 | `Item Code` est lu comme un nombre | On le lit en texte | C'est la clé de jointure avec les ventes |
 | Rien d'anormal : un seul prix par jour et par produit, et chaque vente trouve son prix | On renomme seulement les colonnes | Ce prix d'achat sert à calculer la marge brute |
 
-### product.csv (Ibrahim) : 251 produits
+### product.csv (Ibrahim) :
 
 | Problème trouvé | Ce qu'on fait | Pourquoi (logique métier) |
 |---|---|---|
@@ -43,7 +41,7 @@ Dans les 4 fichiers : **aucune valeur manquante et aucun doublon exact**.
 | Un espace invisible dans la catégorie "Flower/Leaf Vegetables" | On le remplace par un espace normal | Sinon un filtre sur cette catégorie ne trouve rien |
 | 4 noms en double sous 2 codes différents (ex : Broccoli) | On garde les 2 | Ce sont 2 produits différents : on analyse toujours par `Item Code` |
 
-### loss_rate.csv (Ibrahim) : 251 produits
+### loss_rate.csv (Ibrahim) :
 
 | Problème trouvé | Ce qu'on fait | Pourquoi (logique métier) |
 |---|---|---|
