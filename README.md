@@ -19,6 +19,7 @@ Objectif : nettoyer les 4 fichiers reçus (`transaction.csv`, `product.csv`, `pr
 Dans les 4 fichiers : **aucune valeur manquante et aucun doublon exact**.
 
 ### transaction.csv (Henriquet) :
+
 | Problème trouvé | Ce qu'on fait | Pourquoi (logique métier) |
 |---|---|---|
 | `Item Code` est lu comme un nombre | On le lit en texte | C'est un code produit, pas une valeur à additionner |
@@ -28,12 +29,13 @@ Dans les 4 fichiers : **aucune valeur manquante et aucun doublon exact**.
 | Certains produits sont vendus au sachet ou à la boîte alors que la colonne dit "kilo" | Colonne `unite_vente` (kg ou unité) dans `dim_product` | Additionner des kilos et des sachets fausserait la quantité vendue |
 
 ### price.csv (Henriquet) :
+
 | Problème trouvé | Ce qu'on fait | Pourquoi (logique métier) |
 |---|---|---|
 | `Item Code` est lu comme un nombre | On le lit en texte | C'est la clé de jointure avec les ventes |
 | Rien d'anormal : un seul prix par jour et par produit, et chaque vente trouve son prix | On renomme seulement les colonnes | Ce prix d'achat sert à calculer la marge brute |
 
-### product.csv (Ibrahim) :
+### product.csv (Ibrahim) : 
 
 | Problème trouvé | Ce qu'on fait | Pourquoi (logique métier) |
 |---|---|---|
@@ -53,7 +55,7 @@ Dans les 4 fichiers : **aucune valeur manquante et aucun doublon exact**.
 
 ## Étape 2 : modèle de données
 
-### Modèle relationnel (les 4 fichiers bruts)
+### Modèle relationnel
 
 ![Modèle relationnel](images/modele_relationnel.png)
 
@@ -61,7 +63,7 @@ Dans les 4 fichiers : **aucune valeur manquante et aucun doublon exact**.
 - `transaction` se relie à `price` par `Date` + `Item Code` (le prix d'achat du jour)
 - `loss_rate` a exactement un taux par produit (relation 1 pour 1)
 
-### Schéma en étoile (pour le dashboard)
+### Schéma en étoile
 
 ![Schéma en étoile](images/schema_etoile.png)
 
