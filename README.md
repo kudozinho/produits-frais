@@ -12,6 +12,8 @@ Objectif : nettoyer les 4 fichiers reçus (`transaction.csv`, `product.csv`, `pr
 | Henriquet | `transaction.csv`, `price.csv` |
 | Ibrahim | `product.csv`, `loss_rate.csv` |
 
+Ibrahim a quitté le binôme : Henriquet a repris sa partie, l'a intégrée au projet et l'a poussée sur Git.
+
 ---
 
 ## Étape 1 : diagnostic des fichiers
@@ -37,19 +39,35 @@ Dans les 4 fichiers : **aucune valeur manquante et aucun doublon exact**.
 
 ### product.csv (Ibrahim) : 
 
+251 produits, 4 colonnes.
+
 | Problème trouvé | Ce qu'on fait | Pourquoi (logique métier) |
 |---|---|---|
-| 4 noms avec un espace en trop à la fin | On retire l'espace | Sinon le même produit apparaît 2 fois dans un filtre |
-| Un espace invisible dans la catégorie "Flower/Leaf Vegetables" | On le remplace par un espace normal | Sinon un filtre sur cette catégorie ne trouve rien |
-| 4 noms en double sous 2 codes différents (ex : Broccoli) | On garde les 2 | Ce sont 2 produits différents : on analyse toujours par `Item Code` |
+| `Item Code` sur 15 chiffres, lu comme un nombre | On le passe en texte, on contrôle 15 chiffres et l'unicité | Excel le met en notation scientifique et casse les jointures avec transaction et price |
+| Un espace invisible (insécable) dans la catégorie "Flower/Leaf Vegetables", sur ses 100 lignes | On le remplace par un espace normal | Sinon un filtre sur la plus grosse catégorie ne trouve rien |
+| 4 noms avec un espace en trop à la fin (Foreign Garland Chrysanthemum, Yuxingcao, Powcan Mountain Chinese Cabbage, Hericium) | On retire l'espace | Sinon le même produit apparaît 2 fois dans un filtre |
+| `Category Code` lu comme un nombre | On le passe en texte | C'est un identifiant, on ne calcule jamais dessus |
+| 4 noms en double sous 2 codes différents (Broccoli, Chinese Cabbage, Apricot Bao Mushroom (Bag), Chinese Caterpillar Fungus Flowers (Bag)) | On garde les 2, signalés par `is_duplicate_name` | Ce sont 2 produits différents (Broccoli existe même dans 2 catégories) : on analyse toujours par `Item Code` |
+| Le conditionnement est caché dans le nom : 65 en sachet, 15 en boîte, 3 en botte, 1 à la pièce | Nouvelle colonne `packaging` | La quantité est en kilo dans transaction : pour ces produits, l'unité réelle est douteuse (ex : 160 kg vendus d'un produit en sachet) |
+| Colonnes avec espaces et majuscules | Renommées en snake_case | Des noms stables et lisibles en SQL et dans le dashboard |
+
+Contrôles qui passent : aucune valeur manquante, aucun doublon, chaque code catégorie a un seul nom (6 catégories).
 
 ### loss_rate.csv (Ibrahim) :
 
+251 produits, 3 colonnes.
+
 | Problème trouvé | Ce qu'on fait | Pourquoi (logique métier) |
 |---|---|---|
-| `Item Name` est déjà dans product | On ne garde pas cette colonne | Un seul endroit pour le nom du produit |
-| Le taux de perte est lu comme du texte (un espace après chaque valeur) | On le convertit en nombre | Pour pouvoir calculer avec |
-| 22 produits à 0 % de perte, et 85 produits à 9,43 % (la moyenne de la colonne) | On les garde | À vérifier avec le métier : ce sont sûrement des valeurs par défaut |
+| Le taux de perte est lu comme du texte (un espace après chaque valeur, ex : "4.39 ") | On retire l'espace et on le convertit en nombre | Pour pouvoir calculer et filtrer avec |
+| Fichier encodé en UTF-8 avec BOM | On vérifie à l'import que la 1re colonne s'appelle bien `Item Code` | Sinon un caractère invisible se colle au nom de colonne et la requête plante |
+| `Item Code` sur 15 chiffres | On le passe en texte, on contrôle l'unicité | Même raison que product : c'est la clé de jointure |
+| Les mêmes 251 codes que product | Contrôle bloquant | Relation 1 pour 1 : chaque produit a exactement un taux de perte |
+| `Item Name` est déjà dans product, avec les mêmes valeurs | On vérifie puis on ne garde pas cette colonne | Un seul endroit pour le nom du produit |
+| Taux en pourcentage (9,43) | Contrôle entre 0 et 100, ajout du taux en décimal (0,0943) | Le décimal se multiplie directement pour calculer le coût des pertes |
+| 22 produits à 0 % de perte : 13 emballés, 9 vendus au kilo | On les garde, les 9 au kilo sont signalés par `loss_rate_to_check` | 0 % est crédible pour un produit en boîte ou en sachet, pas pour un légume frais en vrac (Lameizi, Lotus Root Tip...). On signale sans inventer de valeur |
+| 85 produits à 9,43 % (la moyenne de la colonne) | On les garde | À vérifier avec le métier : ce sont sûrement des valeurs par défaut |
+| Taux maximum 29,25 % (High Melon (1)) | On le garde | Élevé mais plausible pour un produit très périssable |
 
 ---
 
@@ -103,11 +121,24 @@ Résultat : `fact_sales.csv`, `dim_product.csv` et `dim_date.csv` dans `data/`, 
 | CA | 1 155 057 RMB | 930 519 RMB | +24,1 % |
 | Marge brute | 447 119 RMB | 333 672 RMB | +34,0 % |
 
+**Version BigQuery de product et loss_rate (Ibrahim) :**
+
+| Fichier | Rôle |
+|---|---|
+| `sql/clean_product.sql` | Nettoie product.csv, ajoute `packaging` et `is_duplicate_name` |
+| `sql/clean_loss_rate.sql` | Nettoie loss_rate.csv, ajoute le taux en décimal et `loss_rate_to_check` |
+
+1. Charger les CSV bruts dans les tables `product_raw` et `loss_rate_raw`
+2. Remplacer `project_id.dataset_id` par votre projet et dataset dans les 2 fichiers
+3. Lancer `sql/clean_product.sql`, puis `sql/clean_loss_rate.sql` (l'ordre compte : le second lit `product_clean`)
+
+Chaque script contient des `ASSERT` : si un contrôle échoue, la requête s'arrête avec un message clair. Ces 2 fichiers ne sont pas lancés par `run.sql`, qui reste en DuckDB. Dans le schéma en étoile, les deux tables se rejoignent dans `dim_product` par `item_code`.
+
 ---
 
 ## Organisation Git
 
 - `main` : la version finale
 - `develop` : on y fusionne le travail des deux
-- 4 branches, une par fichier : `feature/clean-transaction` et `feature/clean-price` (Henriquet), `feature/clean-product` et `feature/clean-loss-rate` (Ibrahim)
+- Une branche par partie : `feature/clean-transaction` et `feature/clean-price` (Henriquet), `nettoyage-product-loss-rate` (travail d'Ibrahim, intégré par Henriquet)
 - Le dossier `data/` n'est pas sur Git (`.gitignore`) : `transaction.csv` fait 50 Mo
