@@ -12,6 +12,8 @@ Objectif : nettoyer les 4 fichiers reçus (`transaction.csv`, `product.csv`, `pr
 | Henriquet | `transaction.csv`, `price.csv` |
 | Ibrahim | `product.csv`, `loss_rate.csv` |
 
+Ibrahim a quitté le binôme : Henriquet a repris sa partie, l'a intégrée au projet et l'a poussée sur Git.
+
 ---
 
 ## Étape 1 : diagnostic des fichiers
@@ -138,5 +140,5 @@ Chaque script contient des `ASSERT` : si un contrôle échoue, la requête s'arr
 
 - `main` : la version finale
 - `develop` : on y fusionne le travail des deux
-- 4 branches, une par fichier : `feature/clean-transaction` et `feature/clean-price` (Henriquet), `feature/clean-product` et `feature/clean-loss-rate` (Ibrahim)
+- Une branche par partie : `feature/clean-transaction` et `feature/clean-price` (Henriquet), `nettoyage-product-loss-rate` (travail d'Ibrahim, intégré par Henriquet)
 - Le dossier `data/` n'est pas sur Git (`.gitignore`) : `transaction.csv` fait 50 Mo
